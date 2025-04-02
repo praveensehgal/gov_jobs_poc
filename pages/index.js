@@ -17,6 +17,7 @@ export default function Home() {
   const [opportunities, setOpportunities] = useState([]);
   const [geoData, setGeoData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     department: '',
@@ -30,10 +31,14 @@ export default function Home() {
     const fetchMetrics = async () => {
       try {
         const response = await fetch('/api/metrics');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         setMetrics(data);
       } catch (error) {
         console.error('Error fetching metrics:', error);
+        setError('Failed to load metrics data. Please try again later.');
       }
     };
 
@@ -45,10 +50,14 @@ export default function Home() {
     const fetchGeoData = async () => {
       try {
         const response = await fetch('/api/geo');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         setGeoData(data);
       } catch (error) {
         console.error('Error fetching geo data:', error);
+        setError('Failed to load geographical data. Please try again later.');
       }
     };
 
@@ -67,10 +76,15 @@ export default function Home() {
         });
         
         const response = await fetch(`/api/opportunities?${queryParams.toString()}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         setOpportunities(data.data || []);
+        setError(null);
       } catch (error) {
         console.error('Error fetching opportunities:', error);
+        setError('Failed to load opportunities data. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -94,6 +108,24 @@ export default function Home() {
       active: ''
     });
   };
+
+  // Display error message if there's an error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
